@@ -1,19 +1,21 @@
 {{> petitionImage}}
 {{> petitionText prefix="Sign this"}}
 {{#if err}}
-    <h3>{{err}} </h3>
+    <p class="error">{{err}}</p>
 {{/if}}
-<form method="POST">
-    <label for="firstname">First Name
-        <input name="firstname" />
-    </label>
-    <label for="lastname">Last Name
-        <input name="lastname" />
-    </label>
+<form style="display:flex;"method="POST">
+    <label for="firstname">First Name</label>
+    <input name="firstname" />
+
+    <label for="lastname">Last Name</label>
+    <input name="lastname" />
+    
+    <label for="signature">Sign here</label>
+    <canvas class="signature" id="signature-canvas" width="400" height="50"></canvas>
     <input id="hidden-input" name="signature" type="hidden" />
     
     <button>SIGN</button>
 </form>
-<canvas class="signature" id="signature-canvas" width="400" height="50"></canvas>
+
 
 <script src="/script.js"></script>

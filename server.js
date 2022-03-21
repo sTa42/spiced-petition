@@ -58,19 +58,23 @@ app.post("/petition", (req, res) => {
 });
 app.get("/petition/thankyou", (req, res) => {
     if (req.session.signatureId) {
-        db.getSignatureDataImageUrl(req.session.signatureId)
-            .then((result) => {
-                res.render("thankyou", {
-                    layout: "main",
-                    title: "Thank you for signing the petition for",
-                    imageDataUrl: result.rows[0].sig,
+        db.getSignatureDataImageUrl(req.session.signatureId).then((result) => {
+            return db
+                .getAllPetitionSigners()
+                .then(({ rows: signers }) => {
+                    res.render("thankyou", {
+                        layout: "main",
+                        title: "Thank you for signing the petition for",
+                        imageDataUrl: result.rows[0].sig,
+                        signersAmount: signers.length,
+                    });
+                })
+                .catch(() => {
+                    res.sendStatus(401);
                 });
-            })
-            .catch(() => {
-                res.sendStatus(401);
-            });
+        });
     } else {
-        res.redirect("/petition");
+        res.redirect("/");
     }
 });
 app.get("/petition/signers", (req, res) => {
@@ -93,7 +97,7 @@ app.get("/petition/signers", (req, res) => {
                 });
             });
     } else {
-        res.redirect("/petition");
+        res.redirect("/");
     }
 });
 app.listen(8080, () => {
