@@ -1,13 +1,22 @@
+const secrets = require("./secrets.json");
 const express = require("express");
 const app = express();
 const db = require("./db");
 const { engine } = require("express-handlebars");
 const bodyParser = require("body-parser");
+const cookieSession = require("cookie-session");
 app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(express.static("./static"));
+
+app.use(
+    cookieSession({
+        secret: secrets.COOKIE_SECRET,
+        maxAge: 1000 * 60 * 60 * 24 * 14,
+    })
+);
 
 app.get("/", (req, res) => {
     res.redirect("/petition");
@@ -21,7 +30,9 @@ app.get("/petition", (req, res) => {
 app.post("/petition", (req, res) => {
     console.log(req.body);
     db.signPetition(req.body.firstname, req.body.lastname, req.body.signature)
-        .then(() => {
+        .then((result) => {
+            req.session.signatureId = result.rows[0].id;
+            // console.log(req.session);
             res.redirect("/petition/thankyou");
         })
         .catch((err) => {
@@ -34,9 +45,12 @@ app.post("/petition", (req, res) => {
         });
 });
 app.get("/petition/thankyou", (req, res) => {
-    res.render("thankyou", {
-        layout: "main",
-        title: "Thank you for signing the petition for",
+    db.getSignatureDataImageUrl(req.session.signatureId).then((result) => {
+        res.render("thankyou", {
+            layout: "main",
+            title: "Thank you for signing the petition for",
+            imageDataUrl: result.rows[0].sig,
+        });
     });
 });
 app.get("/petition/signers", (req, res) => {
