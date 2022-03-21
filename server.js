@@ -28,7 +28,7 @@ app.get("/petition", (req, res) => {
     });
 });
 app.post("/petition", (req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
     db.signPetition(req.body.firstname, req.body.lastname, req.body.signature)
         .then((result) => {
             req.session.signatureId = result.rows[0].id;
@@ -36,22 +36,26 @@ app.post("/petition", (req, res) => {
             res.redirect("/petition/thankyou");
         })
         .catch((err) => {
-            console.log(err);
+            // console.log(err);
             res.render("petition", {
                 layout: "main",
                 title: "Petition for",
-                error: true,
+                err,
             });
         });
 });
 app.get("/petition/thankyou", (req, res) => {
-    db.getSignatureDataImageUrl(req.session.signatureId).then((result) => {
-        res.render("thankyou", {
-            layout: "main",
-            title: "Thank you for signing the petition for",
-            imageDataUrl: result.rows[0].sig,
+    db.getSignatureDataImageUrl(req.session.signatureId)
+        .then((result) => {
+            res.render("thankyou", {
+                layout: "main",
+                title: "Thank you for signing the petition for",
+                imageDataUrl: result.rows[0].sig,
+            });
+        })
+        .catch(() => {
+            res.sendStatus(401);
         });
-    });
 });
 app.get("/petition/signers", (req, res) => {
     db.getAllPetitionSigners()

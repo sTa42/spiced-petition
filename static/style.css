@@ -2,6 +2,22 @@
     background-color: lightyellow;
 }
 
-canvas {
-    background-color: lightgreen;
+.signature {
+    background-color: lightgrey;
+}
+body {
+    display: flex;
+    flex-direction: column;
+    /* justify-content: center; */
+    align-items: center;
+}
+
+.signer {
+    text-align: center;
+    font-style: italic;
+    font-size: 1.5em;
+}
+
+.petitionText {
+    color: red;
 }

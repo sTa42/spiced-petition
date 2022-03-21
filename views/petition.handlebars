@@ -1,10 +1,19 @@
-<h2>Please Sign the petition</h2>
-
+{{> petitionImage}}
+{{> petitionText prefix="Sign this"}}
+{{#if err}}
+    <h3>{{err}} </h3>
+{{/if}}
 <form method="POST">
-    <input name="firstname" />
-    <input name="lastname" />
+    <label for="firstname">First Name
+        <input name="firstname" />
+    </label>
+    <label for="lastname">Last Name
+        <input name="lastname" />
+    </label>
     <input id="hidden-input" name="signature" type="hidden" />
-    <button>SIGN PETITION</button>
+    
+    <button>SIGN</button>
 </form>
-<canvas id="signature-canvas" width="400" height="50"></canvas>
+<canvas class="signature" id="signature-canvas" width="400" height="50"></canvas>
+
 <script src="/script.js"></script>

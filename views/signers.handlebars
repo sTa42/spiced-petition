@@ -1,3 +1,10 @@
+{{> petitionImage}}
+{{> petitionText prefix="These people signed the"}}
 <div class="signatures-container">
-{{> firstAndLastName}}
+    {{#if error}}
+        <h3>something went wrong</h3>
+    {{else}}
+    
+        {{> firstAndLastName}}
+    {{/if}}
 </div>

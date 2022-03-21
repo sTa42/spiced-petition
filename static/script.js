@@ -5,10 +5,12 @@ const canvas = signatureCanvas.getContext("2d");
 let startingX, startingY;
 const mouseMoveHandler = (e) => {
     canvas.beginPath();
-    canvas.fillStyle = "blue";
+    canvas.fillStyle = "darkblue";
     canvas.moveTo(startingX, startingY);
     canvas.lineTo(e.offsetX, e.offsetY);
     canvas.stroke();
+    startingX = e.offsetX;
+    startingY = e.offsetY;
 
     signatureInput.value = signatureCanvas.toDataURL();
 };
