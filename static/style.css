@@ -5,6 +5,7 @@
 
 .signature {
     background-color: lightgrey;
+    border: 1px solid black;
 }
 body {
     display: flex;

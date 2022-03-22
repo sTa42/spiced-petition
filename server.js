@@ -26,7 +26,7 @@ app.get("/petition", (req, res) => {
     } else {
         res.render("petition", {
             layout: "main",
-            title: "Petition",
+            title: "Petition for mandatory fedora",
         });
     }
 });
@@ -48,7 +48,7 @@ app.post("/petition", (req, res) => {
                 // console.log(err);
                 res.render("petition", {
                     layout: "main",
-                    title: "Petition for",
+                    title: "Petition for mandatory fedora",
                     err,
                 });
             });
@@ -64,7 +64,7 @@ app.get("/petition/thankyou", (req, res) => {
                 .then(({ rows: signers }) => {
                     res.render("thankyou", {
                         layout: "main",
-                        title: "Thank you for signing the petition for",
+                        title: "Thank you for signing the petition",
                         imageDataUrl: result.rows[0].sig,
                         signersAmount: signers.length,
                     });
@@ -81,10 +81,10 @@ app.get("/petition/signers", (req, res) => {
     if (req.session.signatureId) {
         db.getAllPetitionSigners()
             .then(({ rows: signers }) => {
-                console.log(signers);
+                // console.log(signers);
                 res.render("signers", {
                     layout: "main",
-                    title: "All signatures for Petition",
+                    title: "Signers of the petition",
                     signers,
                 });
             })
@@ -92,7 +92,7 @@ app.get("/petition/signers", (req, res) => {
                 console.log(err);
                 res.render("signers", {
                     layout: "main",
-                    title: "All signatures for Petition",
+                    title: "Signers of the petition",
                     error: true,
                 });
             });
