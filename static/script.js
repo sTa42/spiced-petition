@@ -6,6 +6,7 @@ let startingX, startingY;
 const mouseMoveHandler = (e) => {
     canvas.beginPath();
     canvas.fillStyle = "darkblue";
+    canvas.lineWidth = 2;
     canvas.moveTo(startingX, startingY);
     canvas.lineTo(e.offsetX, e.offsetY);
     canvas.stroke();
