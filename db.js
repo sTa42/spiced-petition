@@ -1,5 +1,8 @@
 const spicedPg = require("spiced-pg");
-const db = spicedPg(`postgres:postgres:postgres@localhost:5432/petition`);
+const db = spicedPg(
+    process.env.DATABASE_URL ||
+        `postgres:postgres:postgres@localhost:5432/petition`
+);
 
 exports.signPetition = (userId, signature) => {
     // if (firstname === "" || lastname === "" || signature === "") {
@@ -44,8 +47,16 @@ exports.login = (email, password) => {
 exports.getAllPetitionSigners = () => {
     // return db.query(`SELECT * FROM signatures;`);
     // return db.query(`SELECT COUNT(*) FROM signatures;`);
+    // return db.query(
+    //     `SELECT users.firstname, users.lastname FROM users JOIN signatures ON users.id = signatures.user_id; `
+    // );
     return db.query(
-        `SELECT users.firstname, users.lastname FROM users JOIN signatures ON users.id = signatures.user_id; `
+        `SELECT users.firstname, users.lastname, user_profiles.age, user_profiles.city, user_profiles.url 
+        FROM signatures 
+        JOIN users 
+        ON signatures.user_id = users.id 
+        FULL OUTER JOIN user_profiles 
+        ON user_profiles.user_id = users.id;`
     );
 };
 
@@ -55,6 +66,26 @@ exports.getSignatureDataImageUrl = (id) => {
     ]);
 };
 exports.getPasswordHash = (email) => {
-    console.log(email);
+    // console.log(email);
     return db.query(`SELECT password,id FROM users WHERE email=$1`, [email]);
+};
+
+exports.addProfile = (id, age, city, url) => {
+    return db.query(
+        `INSERT INTO user_profiles (user_id, age, city, url) VALUES ($1, $2, $3, $4)`,
+        [id, age, city, url]
+    );
+};
+
+exports.getSignersByCity = (city) => {
+    return db.query(
+        `SELECT users.firstname, users.lastname, user_profiles.age, user_profiles.city, user_profiles.url 
+        FROM signatures 
+        JOIN users 
+        ON signatures.user_id = users.id 
+        FULL OUTER JOIN user_profiles 
+        ON user_profiles.user_id = users.id
+        WHERE LOWER(user_profiles.city) = LOWER($1);`,
+        [city]
+    );
 };

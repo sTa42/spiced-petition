@@ -1,5 +1,20 @@
 {{#signers}}
     <div class="signer">
-        <span>{{firstname}} {{lastname}}</span>
+        <span>
+            {{#if url}}<a href="{{url}}">{{firstname}} {{lastname}}</a>
+            {{else}}{{firstname}}
+                {{lastname}}
+            {{/if}}
+            {{#if age}}, {{age}}{{/if}}
+            {{#if ../noSignersFromCity}}
+            {{else}}
+                {{#if city}},
+                    <a
+                        class="citylink"
+                        href="/petition/{{city}}"
+                    >{{city}}</a>{{/if}}
+            {{/if}}
+
+        </span>
     </div>
 {{/signers}}

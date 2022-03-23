@@ -12,12 +12,25 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(express.static("./static"));
 
+app.use((req, res, next) => {
+    res.set("x-frame-options", "deny");
+    next();
+});
 app.use(
     cookieSession({
-        secret: secrets.COOKIE_SECRET,
+        secret: process.env.COOKIE_SECRET || secrets.COOKIE_SECRET,
         maxAge: 1000 * 60 * 60 * 24 * 14,
+        sameSite: true,
     })
 );
+
+app.use("/petition", (req, res, next) => {
+    if (req.session.signatureId) {
+        next();
+    } else {
+        req.method === "GET" ? res.redirect("/") : res.sendStatus(401);
+    }
+});
 app.get("/", (req, res) => {
     res.redirect("/register");
 });
@@ -39,7 +52,7 @@ app.post("/register", (req, res) => {
             )
                 .then((result) => {
                     req.session.signatureId = result.rows[0].id;
-                    res.redirect("/petition");
+                    res.redirect("/profile");
                 })
                 .catch((err) => {
                     console.log(err);
@@ -72,7 +85,7 @@ app.post("/login", (req, res) => {
                     // console.log(isPasswordCorrect);
                     if (isPasswordCorrect) {
                         req.session.signatureId = userId;
-                        res.redirect("/petition");
+                        res.redirect("/profile");
                     } else {
                         res.render("login", {
                             layout: "main",
@@ -112,31 +125,27 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/petition", (req, res) => {
-    if (req.session.signatureId) {
-        db.getSignatureDataImageUrl(req.session.signatureId)
-            .then((result) => {
-                // console.log(result);
-                if (result.rows.length === 0) {
-                    res.render("petition", {
-                        layout: "main",
-                        title: "Petition for mandatory fedora",
-                    });
-                } else {
-                    res.redirect("/petition/thankyou");
-                }
-            })
-            .catch((err) => {
+    db.getSignatureDataImageUrl(req.session.signatureId)
+        .then((result) => {
+            // console.log(result);
+            if (result.rows.length === 0) {
                 res.render("petition", {
                     layout: "main",
                     title: "Petition for mandatory fedora",
-                    err,
                 });
+            } else {
+                res.redirect("/petition/thankyou");
+            }
+        })
+        .catch((err) => {
+            res.render("petition", {
+                layout: "main",
+                title: "Petition for mandatory fedora",
+                err,
             });
+        });
 
-        // res.redirect("/petition/thankyou");
-    } else {
-        res.redirect("/");
-    }
+    // res.redirect("/petition/thankyou");
 });
 app.post("/petition", (req, res) => {
     // console.log(req.body);
@@ -165,6 +174,7 @@ app.get("/petition/thankyou", (req, res) => {
         // console.log(req.session.signatureId);
         db.getSignatureDataImageUrl(req.session.signatureId)
             .then((result) => {
+                // db.getAllPetitionSigners().then().catch();
                 // console.log(result.rows[0].signature);
                 res.render("thankyou", {
                     layout: "main",
@@ -219,6 +229,63 @@ app.get("/petition/signers", (req, res) => {
         res.redirect("/");
     }
 });
-app.listen(8080, () => {
+app.get("/profile", (req, res) => {
+    if (req.session.signatureId) {
+        res.render("profile", {
+            layout: "main",
+        });
+    } else {
+        res.redirect("/");
+    }
+});
+app.post("/profile", (req, res) => {
+    if (req.session.signatureId) {
+        db.addProfile(
+            req.session.signatureId,
+            req.body.age,
+            req.body.city,
+            req.body.homepage
+        )
+            .then(() => {
+                res.redirect("/petition");
+            })
+            .catch((err) => {
+                res.render("profile", {
+                    layout: "main",
+                    err,
+                });
+            });
+    } else {
+        res.sendStatus(401);
+    }
+});
+
+app.get("/petition/:city", (req, res) => {
+    console.log(req.params);
+
+    db.getSignersByCity(req.params.city)
+        .then(({ rows: signers }) => {
+            console.log(signers);
+            if (signers.length === 0) {
+                res.render("city", {
+                    layout: "main",
+                    cityy: req.params.city,
+                    title: "No signers from " + req.params.city,
+                    noSignersFromCity: true,
+                });
+            } else {
+                res.render("city", {
+                    layout: "main",
+                    title: "Signers from " + req.params.city,
+                    cityy: req.params.city,
+                    signers,
+                });
+            }
+        })
+        .catch(() => {
+            res.render("city", { layout: "main" });
+        });
+});
+app.listen(process.env.port || 8080, () => {
     console.log("Listening on port 8080");
 });

@@ -15,3 +15,11 @@ CREATE TABLE signatures (
     user_id INTEGER NOT NULL UNIQUE REFERENCES users(id),
     signature TEXT NOT NULL CHECK (signature !='')
 );
+
+CREATE TABLE user_profiles {
+    id SERIAL PRIMARY KEY,
+    age INT,
+    city VARCHAR(255),
+    url VARCHAR(255),
+    user_id INT NOT NULL UNIQUE REFERENCES users(id)
+};
