@@ -24,13 +24,46 @@ app.use(
     })
 );
 
-// app.use("/petition", (req, res, next) => {
-//     if (req.session.signatureId) {
-//         next();
-//     } else {
-//         req.method === "GET" ? res.redirect("/") : res.sendStatus(401);
-//     }
-// });
+app.use((req, res, next) => {
+    console.log(`${req.method} ON ${req.url} CAME IN.`);
+
+    if (req.method === "GET" || req.method === "POST") {
+        console.log(`${req.method} IS OKAY.`);
+        if (
+            !req.session.signatureId &&
+            (req.url === "/" || req.url === "/register" || req.url === "/login")
+        ) {
+            console.log(`${req.method} ON ${req.url} was granted. No Session.`);
+            next();
+        } else {
+            if (req.session.signatureId) {
+                if (
+                    req.url === "/" ||
+                    req.url === "/register" ||
+                    req.url === "/login"
+                ) {
+                    console.log(
+                        `${req.method} ON ${req.url} on starter urls. Session.`
+                    );
+                    res.redirect("/petition");
+                } else {
+                    console.log(
+                        `${req.method} ON ${req.url} was granted. Session.`
+                    );
+                    next();
+                }
+            } else {
+                console.log(
+                    `${req.method} ON ${req.url} no starter urls, no session.`
+                );
+                req.method === "GET" ? res.redirect("/") : res.sendStatus(400);
+            }
+        }
+    } else {
+        console.log(`${req.method} ON ${req.url} was forbidden.`);
+        res.sendStatus(400);
+    }
+});
 
 app.get("/", (req, res) => {
     res.redirect("/register");
@@ -113,40 +146,6 @@ app.post("/login", (req, res) => {
             });
         });
 });
-// app.use((req, res, next) => {
-//     // console.log(req);
-
-//     console.log(req.method, req.url);
-//     if (req.method === ("GET" || "POST")) {
-//         console.log(req.method, "was ok");
-//         if (
-//             !req.session.signatureId &&
-//             req.url === ("/" || "/register" || "/login")
-//         ) {
-//             console.log("WHY IS ", req.url, "No cookie and allowed urls");
-//             // res.redirect(req.url);
-//             res.redirect(req.url);
-//             // res.redirect(req.url);
-//         } else {
-//             if (req.session.signatureId) {
-//                 if (req.url === ("/" || "/register" || "/login")) {
-//                     console.log("PETITION REDIRECT???");
-//                     res.redirect("/petition");
-//                 } else {
-//                     console.log("next with cookie?");
-//                     // res.redirect(req.url);
-//                     next();
-//                 }
-//             } else {
-//                 console.log("I WAS HERE?");
-//                 req.method === "GET" ? res.redirect("/") : res.sendStatus(400);
-//             }
-//         }
-//     } else {
-//         console.log("WAS FORBIDDEN");
-//         res.sendStatus(400);
-//     }
-// });
 app.get("/petition", (req, res) => {
     db.getSignatureDataImageUrl(req.session.signatureId)
         .then((result) => {
@@ -340,9 +339,13 @@ app.post("/profile/edit", (req, res) => {
                     .then(() => {
                         res.redirect("/profile/edit");
                     })
-                    .catch();
+                    .catch(() => {
+                        res.redirect("/profile/edit");
+                    });
             })
-            .catch();
+            .catch((err) => {
+                console.log(err);
+            });
     } else {
         Promise.all([
             db.updateUser(
@@ -361,7 +364,9 @@ app.post("/profile/edit", (req, res) => {
             .then(() => {
                 res.redirect("/profile/edit");
             })
-            .catch();
+            .catch(() => {
+                res.redirect("/profile/edit");
+            });
     }
 });
 app.post("/petition/signature/delete", (req, res) => {
