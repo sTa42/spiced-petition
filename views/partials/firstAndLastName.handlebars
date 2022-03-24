@@ -6,8 +6,7 @@
                 {{lastname}}
             {{/if}}
             {{#if age}}, {{age}}{{/if}}
-            {{#if ../noSignersFromCity}}
-            {{else}}
+            {{#if ../cityView}}{{else}}
                 {{#if city}},
                     <a
                         class="citylink"

@@ -1,4 +1,8 @@
-{{> petitionImage}}
 {{> petitionText prefix="Thank you for signing the"}}
 <img class="signature" src="{{imageDataUrl}}" alt="signature" height="50" width="400"</>
 <a class ="seeAllLink" href="/petition/signers">See all {{signersAmount}} signers</a>
+<a href="/profile/edit">Edit your profile</a>
+<form method="POST" action="/petition/signature/delete">
+<input class="deteleLink" value="Delete your signature" type="submit"></form>
+<form method="POST" action="/profile/delete">
+<input class="deteleLink" value="Delete your account" type="submit"></form>

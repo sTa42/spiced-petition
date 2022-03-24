@@ -45,19 +45,17 @@ exports.login = (email, password) => {
 };
 
 exports.getAllPetitionSigners = () => {
-    // return db.query(`SELECT * FROM signatures;`);
-    // return db.query(`SELECT COUNT(*) FROM signatures;`);
-    // return db.query(
-    //     `SELECT users.firstname, users.lastname FROM users JOIN signatures ON users.id = signatures.user_id; `
-    // );
     return db.query(
-        `SELECT users.firstname, users.lastname, user_profiles.age, user_profiles.city, user_profiles.url 
-        FROM signatures 
-        JOIN users 
-        ON signatures.user_id = users.id 
-        FULL OUTER JOIN user_profiles 
-        ON user_profiles.user_id = users.id;`
+        `SELECT users.firstname, users.lastname, user_profiles.age, user_profiles.city, user_profiles.url
+        FROM signatures
+        JOIN users
+        ON signatures.user_id = users.id
+        LEFT OUTER JOIN user_profiles
+        ON user_profiles.user_id = signatures.user_id;`
     );
+};
+exports.getSignatureCount = () => {
+    return db.query(`SELECT COUNT(*) FROM signatures;`);
 };
 
 exports.getSignatureDataImageUrl = (id) => {
@@ -71,6 +69,9 @@ exports.getPasswordHash = (email) => {
 };
 
 exports.addProfile = (id, age, city, url) => {
+    if (age.length === 0) age = null;
+    if (city.length === 0) city = null;
+    if (url.length === 0) url = null;
     return db.query(
         `INSERT INTO user_profiles (user_id, age, city, url) VALUES ($1, $2, $3, $4)`,
         [id, age, city, url]
@@ -88,4 +89,60 @@ exports.getSignersByCity = (city) => {
         WHERE LOWER(user_profiles.city) = LOWER($1);`,
         [city]
     );
+};
+
+exports.getCompleteUserProfileData = (id) => {
+    return db.query(
+        `SELECT users.id, users.firstname, users.lastname, users.email, 
+        user_profiles.age, user_profiles.city, user_profiles.url 
+        FROM users 
+        FULL OUTER JOIN user_profiles 
+        ON users.id = user_profiles.user_id
+        WHERE users.id = $1;`,
+        [id]
+    );
+};
+exports.updateUser = (id, firstname, lastname, email, password) => {
+    console.log(password);
+    if (typeof password === "undefined") {
+        return db.query(
+            `UPDATE users SET firstname=$2, lastname=$3, email=$4 WHERE id = $1;`,
+            [id, firstname, lastname, email]
+        );
+    } else {
+        return db.query(
+            `UPDATE users SET firstname=$2, lastname=$3, email=$4, password=$5 
+            WHERE id = $1;`,
+            [id, firstname, lastname, email, password]
+        );
+    }
+};
+exports.updateUserProfileData = (id, age, city, url) => {
+    return db.query(
+        `INSERT INTO user_profiles (user_id, age, city, url)
+         VALUES ($1, $2, $3, $4) 
+         ON CONFLICT(user_id) 
+         DO UPDATE SET age=$2, city=$3, url=$4;`,
+        [id, age, city, url]
+    );
+};
+exports.deleteSignature = (id) => {
+    return db.query(
+        `DELETE FROM signatures
+         WHERE user_id=$1`,
+        [id]
+    );
+};
+
+exports.deleteAccount = (id) => {
+    return Promise.all([
+        db.query(`DELETE FROM signatures WHERE user_id = $1`, [id]),
+        db.query(`DELETE FROM user_profiles WHERE user_id = $1`, [id]),
+    ])
+        .then(() => {
+            return db.query(`DELETE FROM users WHERE id = $1`, [id]);
+        })
+        .catch((err) => {
+            console.log(err);
+        });
 };

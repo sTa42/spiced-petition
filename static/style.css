@@ -29,6 +29,7 @@ form button {
     width: 150px;
     background-color: lightcoral;
     font-size: 2em;
+    cursor: pointer;
 }
 .signer {
     text-align: center;
@@ -54,4 +55,19 @@ form button {
     color: lightskyblue;
 }
 .citylink {
+}
+.deteleLink {
+    background: none;
+    border: none;
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.logoutLink {
+    background: none;
+    border: none;
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
 }
