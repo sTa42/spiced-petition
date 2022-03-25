@@ -12,7 +12,8 @@
         <link rel="icon" href="/fedora.png" />
     </head>
     <body>
-        {{> logout}}
+        {{#if loggedIn}}{{> logout}}
+        {{/if}}
         {{> petitionImage}}
         {{{body}}}
     </body>

@@ -1,3 +1,4 @@
+{{> petitionLink}}
 {{#if err}}
     <p class="error">{{err}}</p>
 {{/if}}
@@ -17,7 +18,7 @@
 
 
     <label for="age">Age</label>
-    <input name="age" value="{{age}}"/>
+    <input type="number" min="0" max="140" name="age" value="{{age}}"/>
 
     <label for="city">City</label>
     <input name="city" value="{{city}}"/>

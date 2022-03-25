@@ -5,29 +5,8 @@ const db = spicedPg(
 );
 
 exports.signPetition = (userId, signature) => {
-    // if (firstname === "" || lastname === "" || signature === "") {
-    //     return new Promise((resolve, reject) => {
-    //         reject("Something went wrong, please try again.");
-    //     });
-    // }
-    //     if (firstname === "") {
-    //         return new Promise((resolve, reject) => {});
-    //     }
-    // if (lastname === "") {
-    //     return new Promise((resolve, reject) => {});
-    // }
-    // if (signature === "") {
-    //     return new Promise((resolve, reject) => {
-    //         const error = "Missing signature";
-    //         reject(error);
-    //     });
-    // }
-    // return db.query(
-    //     `INSERT INTO signatures (firstname, lastname, sig) VALUES ($1, $2, $3) RETURNING id;`,
-    //     [firstname, lastname, signature]
-    // );
     return db.query(
-        `INSERT INTO signatures (user_id, signature) VALUES ($1, $2)`,
+        `INSERT INTO signatures (user_id, signature) VALUES ($1, $2) RETURNING id;`,
         [userId, signature]
     );
 };
@@ -59,13 +38,30 @@ exports.getSignatureCount = () => {
 };
 
 exports.getSignatureDataImageUrl = (id) => {
-    return db.query(`SELECT signature FROM signatures WHERE user_id = $1`, [
-        id,
-    ]);
+    return db.query(
+        `SELECT signature 
+        FROM signatures 
+        WHERE user_id = $1;`,
+        [id]
+    );
 };
 exports.getPasswordHash = (email) => {
-    // console.log(email);
-    return db.query(`SELECT password,id FROM users WHERE email=$1`, [email]);
+    return db.query(
+        `SELECT password,id 
+        FROM users 
+        WHERE email=$1`,
+        [email]
+    );
+};
+exports.getPasswordHashAndSignerId = (email) => {
+    return db.query(
+        `SELECT users.id AS userid, signatures.id AS signedid, users.password AS password  
+        FROM users 
+        LEFT JOIN signatures 
+        ON users.id = signatures.user_id 
+        WHERE users.email = $1;`,
+        [email]
+    );
 };
 
 exports.addProfile = (id, age, city, url) => {
@@ -73,7 +69,8 @@ exports.addProfile = (id, age, city, url) => {
     if (city.length === 0) city = null;
     if (url.length === 0) url = null;
     return db.query(
-        `INSERT INTO user_profiles (user_id, age, city, url) VALUES ($1, $2, $3, $4)`,
+        `INSERT INTO user_profiles (user_id, age, city, url) 
+        VALUES ($1, $2, $3, $4)`,
         [id, age, city, url]
     );
 };
@@ -103,7 +100,6 @@ exports.getCompleteUserProfileData = (id) => {
     );
 };
 exports.updateUser = (id, firstname, lastname, email, password) => {
-    console.log(password);
     if (typeof password === "undefined") {
         return db.query(
             `UPDATE users SET firstname=$2, lastname=$3, email=$4 WHERE id = $1;`,
@@ -118,6 +114,10 @@ exports.updateUser = (id, firstname, lastname, email, password) => {
     }
 };
 exports.updateUserProfileData = (id, age, city, url) => {
+    console.log("FROM DATABASE", id, age, city, url);
+    if (age.length === 0) age = null;
+    if (city.length === 0) city = null;
+    if (url.length === 0) url = null;
     return db.query(
         `INSERT INTO user_profiles (user_id, age, city, url)
          VALUES ($1, $2, $3, $4) 
@@ -145,4 +145,8 @@ exports.deleteAccount = (id) => {
         .catch((err) => {
             console.log(err);
         });
+};
+
+exports.doesUserhaveProfile = (id) => {
+    return db.query(`SELECT * FROM user_profiles WHERE user_id = $1;`, [id]);
 };

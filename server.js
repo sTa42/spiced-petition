@@ -1,6 +1,7 @@
 const secrets = require("./secrets.json");
 const express = require("express");
-const app = express();
+const app = (exports.app = express());
+// const app = express();
 const db = require("./db");
 const { engine } = require("express-handlebars");
 const bodyParser = require("body-parser");
@@ -45,7 +46,7 @@ app.use((req, res, next) => {
                     console.log(
                         `${req.method} ON ${req.url} on starter urls. Session.`
                     );
-                    res.redirect("/petition");
+                    return res.redirect("/petition");
                 } else {
                     console.log(
                         `${req.method} ON ${req.url} was granted. Session.`
@@ -109,17 +110,21 @@ app.get("/login", (req, res) => {
     });
 });
 app.post("/login", (req, res) => {
-    db.getPasswordHash(req.body.email)
+    db.getPasswordHashAndSignerId(req.body.email)
         .then((result) => {
-            // console.log(result);
+            console.log(result.rows[0]);
             const hashedPassword = result.rows[0].password;
-            const userId = result.rows[0].id;
+            const userId = result.rows[0].userid;
+
             // console.log(hashedPassword);
             return compare(req.body.password, hashedPassword)
                 .then((isPasswordCorrect) => {
                     // console.log(isPasswordCorrect);
                     if (isPasswordCorrect) {
                         req.session.signatureId = userId;
+                        if (result.rows[0].signedid) {
+                            req.session.signedId = result.rows[0].signedid;
+                        }
                         res.redirect("/petition");
                     } else {
                         res.render("login", {
@@ -147,136 +152,164 @@ app.post("/login", (req, res) => {
         });
 });
 app.get("/petition", (req, res) => {
-    db.getSignatureDataImageUrl(req.session.signatureId)
-        .then((result) => {
-            // console.log(result);
-            if (result.rows.length === 0) {
+    if (!req.session.signedId) {
+        db.getSignatureDataImageUrl(req.session.signatureId)
+            .then((result) => {
+                // console.log(result);
+                if (result.rows.length === 0) {
+                    res.render("petition", {
+                        layout: "main",
+                        title: "Petition for mandatory fedora",
+                        loggedIn: true,
+                    });
+                } else {
+                    res.redirect("/petition/thankyou");
+                }
+            })
+            .catch((err) => {
                 res.render("petition", {
                     layout: "main",
                     title: "Petition for mandatory fedora",
+                    loggedIn: true,
+                    err,
                 });
-            } else {
-                res.redirect("/petition/thankyou");
-            }
-        })
-        .catch((err) => {
-            res.render("petition", {
-                layout: "main",
-                title: "Petition for mandatory fedora",
-                err,
             });
-        });
+    } else {
+        res.redirect("/petition/thankyou");
+    }
 });
 app.post("/petition", (req, res) => {
     // console.log(req.body);
-
-    db.signPetition(req.session.signatureId, req.body.signature)
-        .then(() => {
-            // req.session.signatureId = result.rows[0].id;
-            // console.log(req.session);
-            res.redirect("/petition/thankyou");
-        })
-        .catch((err) => {
-            // console.log(err);
-            res.render("petition", {
-                layout: "main",
-                title: "Petition for mandatory fedora",
-                err,
+    if (req.session.signedId) {
+        res.redirect("/petition");
+    } else {
+        db.signPetition(req.session.signatureId, req.body.signature)
+            .then((result) => {
+                // req.session.signatureId = result.rows[0].id;
+                // console.log(req.session);
+                req.session.signedId = result.rows[0].id;
+                res.redirect("/petition/thankyou");
+            })
+            .catch((err) => {
+                // console.log(err);
+                res.render("petition", {
+                    layout: "main",
+                    title: "Petition for mandatory fedora",
+                    loggedIn: true,
+                    err,
+                });
             });
-        });
+    }
 });
 app.get("/petition/thankyou", (req, res) => {
-    db.getSignatureDataImageUrl(req.session.signatureId)
-        .then((result) => {
-            // db.getAllPetitionSigners().then().catch();
-            // console.log(result.rows[0].signature);
-            console.log(result.rows);
-            res.render("thankyou", {
-                layout: "main",
-                title: "Thank you",
-                imageDataUrl: result.rows[0].signature,
+    if (req.session.signedId) {
+        Promise.all([
+            db.getSignatureDataImageUrl(req.session.signatureId),
+            db.getSignatureCount(),
+        ])
+            .then((result) => {
+                res.render("thankyou", {
+                    layout: "main",
+                    title: "Thank you",
+                    loggedIn: true,
+                    imageDataUrl: result[0].rows[0].signature,
+                    signersAmount: result[1].rows[0].count,
+                });
+            })
+            .catch((err) => {
+                console.log(err);
+                res.redirect("/");
             });
-        })
-        .catch(() => {
-            res.sendStatus(401);
-        });
-    // Promise.all([
-    //     db.getSignatureDataImageUrl(req.session.signatureId),
-    //     db.getSignatureCount(),
-    // ])
-    //     .then((result) => {
-    //         // console.log(result[0], result[1]);
-    //         console.log(result[0].rows[0].signature);
-    //         const signersAmount = result[1].rows[0].count;
-    //         const imagaDataUrl = result[0].rows[0].signature;
-    //         res.render("thankyou", {
-    //             layout: "main",
-    //             title: "Thank you",
-    //             signersAmount,
-    //             imagaDataUrl,
-    //         });
-    //         // console.log(result[0], result[1]);
-    //     })
-    //     .catch((err) => {
-    //         console.log(err);
-    //     });
-
-    // db.getSignatureDataImageUrl(req.session.signatureId).then((result) => {
-    //     return db
-    //         .getAllPetitionSigners()
-
-    //         .then(({ rows: signers }) => {
-    //             res.render("thankyou", {
-    //                 layout: "main",
-    //                 title: "Thank you for signing the petition",
-    //                 imageDataUrl: result.rows[0].signature,
-    //                 // signersAmount: signers.length,
-    //             });
-    //         })
-    //         .catch(() => {
-    //             res.sendStatus(401);
-    //         });
-    // });
+    } else {
+        res.redirect("/petition");
+    }
 });
 app.get("/petition/signers", (req, res) => {
-    db.getAllPetitionSigners()
-        .then(({ rows: signers }) => {
-            console.log(signers);
-            res.render("signers", {
-                layout: "main",
-                title: "Signers of the petition",
-                signers,
+    if (req.session.signedId) {
+        db.getAllPetitionSigners()
+            .then(({ rows: signers }) => {
+                console.log(signers);
+                res.render("signers", {
+                    layout: "main",
+                    title: "Signers of the petition",
+                    loggedIn: true,
+                    signers,
+                });
+            })
+            .catch((err) => {
+                console.log(err);
+                res.render("signers", {
+                    layout: "main",
+                    title: "Signers of the petition",
+                    loggedIn: true,
+                    error: true,
+                });
             });
-        })
-        .catch((err) => {
-            console.log(err);
-            res.render("signers", {
-                layout: "main",
-                title: "Signers of the petition",
-                error: true,
-            });
-        });
+    } else {
+        res.redirect("/petition");
+    }
 });
 app.get("/profile", (req, res) => {
-    res.render("profile", {
-        layout: "main",
-    });
+    db.doesUserhaveProfile(req.session.signatureId)
+        .then(({ rows }) => {
+            if (rows.length === 0) {
+                res.render("profile", {
+                    layout: "main",
+                    loggedIn: true,
+                });
+            } else {
+                return res.redirect("/profile/edit");
+            }
+        })
+        .catch(() => {});
 });
 app.post("/profile", (req, res) => {
-    db.addProfile(
-        req.session.signatureId,
-        req.body.age,
-        req.body.city,
-        req.body.homepage
-    )
-        .then(() => {
-            res.redirect("/petition");
+    db.doesUserhaveProfile(req.session.signatureId)
+        .then(({ rows }) => {
+            console.log(rows);
+            if (rows.length === 0) {
+                if (
+                    req.body.age.length === 0 &&
+                    req.body.city.length === 0 &&
+                    req.body.homepage.length === 0
+                ) {
+                    return res.redirect("/petition");
+                }
+                if (
+                    req.body.age.startsWith("<") ||
+                    req.body.age.startsWith("http") ||
+                    req.body.city.startsWith("<") ||
+                    req.body.city.startsWith("http") ||
+                    req.body.homepage.startsWith("<") ||
+                    req.body.homepage.startsWith("http")
+                ) {
+                    return res.render("profile", {
+                        layout: "main",
+                        loggedIn: true,
+                        err: "bad input",
+                    });
+                }
+                db.addProfile(
+                    req.session.signatureId,
+                    req.body.age,
+                    req.body.city,
+                    req.body.homepage
+                )
+                    .then(() => {
+                        res.redirect("/petition");
+                    })
+                    .catch((err) => {
+                        res.render("profile", {
+                            layout: "main",
+                            loggedIn: true,
+                            err,
+                        });
+                    });
+            }
+            return res.redirect("/profile/edit");
         })
-        .catch((err) => {
-            res.render("profile", {
-                layout: "main",
-                err,
-            });
+        .catch(() => {
+            res.redirect("/petition");
         });
 });
 
@@ -290,6 +323,7 @@ app.get("/petition/:city", (req, res) => {
                     city: req.params.city,
                     title: "No signers from " + req.params.city,
                     noSignersFromCity: true,
+                    loggedIn: true,
                 });
             } else {
                 res.render("city", {
@@ -298,11 +332,12 @@ app.get("/petition/:city", (req, res) => {
                     city: req.params.city,
                     cityView: true,
                     signers,
+                    loggedIn: true,
                 });
             }
         })
         .catch(() => {
-            res.render("city", { layout: "main" });
+            res.render("city", { layout: "main", loggedIn: true });
         });
 });
 
@@ -312,12 +347,37 @@ app.get("/profile/edit", (req, res) => {
             console.log(userData);
             res.render("editprofile", {
                 layout: "main",
+                loggedIn: true,
                 userData: userData[0],
             });
         })
         .catch();
 });
 app.post("/profile/edit", (req, res) => {
+    console.log(req.body);
+    if (
+        req.body.age.startsWith("<") ||
+        req.body.age.startsWith("http") ||
+        req.body.city.startsWith("<") ||
+        req.body.city.startsWith("http") ||
+        req.body.homepage.startsWith("<") ||
+        req.body.homepage.startsWith("http")
+    ) {
+        return db
+            .getCompleteUserProfileData(req.session.signatureId)
+            .then(({ rows: userData }) => {
+                console.log(userData);
+
+                res.render("editprofile", {
+                    layout: "main",
+                    loggedIn: true,
+                    err: "bad input",
+                    userData: userData[0],
+                });
+            })
+            .catch(() => {});
+    }
+
     if (req.body.password.length != 0) {
         hash(req.body.password)
             .then((hashedPassword) => {
@@ -372,6 +432,7 @@ app.post("/profile/edit", (req, res) => {
 app.post("/petition/signature/delete", (req, res) => {
     db.deleteSignature(req.session.signatureId)
         .then(() => {
+            req.session.signedId = null;
             res.redirect("/petition");
         })
         .catch();
@@ -381,7 +442,7 @@ app.post("/profile/delete", (req, res) => {
     db.deleteAccount(req.session.signatureId)
         .then((result) => {
             req.session = null;
-            console.log(result);
+            // console.log(result);
             res.redirect("/");
         })
         .catch((err) => {
@@ -392,6 +453,8 @@ app.post("/profile/logout", (req, res) => {
     req.session = null;
     res.redirect("/");
 });
-app.listen(process.env.port || 8080, () => {
-    console.log("Listening on port 8080");
-});
+if (require.main === module) {
+    app.listen(process.env.port || 8080, () => {
+        console.log("Listening on port 8080");
+    });
+}
