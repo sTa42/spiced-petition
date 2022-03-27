@@ -38,7 +38,7 @@ app.use("/", profileRouter);
 app.use("/", petitionRouter);
 
 if (require.main === module) {
-    app.listen(process.env.port || 8080, () => {
+    app.listen(process.env.PORT || 8080, () => {
         console.log("Listening on port 8080");
     });
 }
