@@ -26,10 +26,11 @@ form label {
     font-size: 0.75em;
 }
 form button {
-    width: 150px;
+    /* width: 150px; */
     background-color: lightcoral;
     font-size: 2em;
     cursor: pointer;
+    padding: 5%;
 }
 .signer {
     text-align: center;
@@ -56,18 +57,31 @@ form button {
 }
 .citylink {
 }
-.deteleLink {
+.deleteLink {
     background: none;
     border: none;
-    color: blue;
+    color: darkblue;
     text-decoration: underline;
     cursor: pointer;
+    font-size: 0.75em;
 }
-
+.regularLink {
+    font-size: 1.25em;
+    text-decoration: none;
+    color: blue;
+}
+.regularLink:hover {
+    text-decoration: underline;
+}
+.regularText {
+    color: blue;
+    font-size: 1.25em;
+}
 .logoutLink {
     background: none;
     border: none;
-    color: blue;
-    text-decoration: underline;
+    color: darkblue;
+    text-decoration: none;
     cursor: pointer;
+    font-size: 0.75em;
 }

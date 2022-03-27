@@ -3,16 +3,9 @@ const { app } = require("./server");
 const cookieSession = require("cookie-session");
 
 // Part 1
-test("GET to /petition, without logged in, expecting redirect to / route", () => {
+test("GET to /petition, without logged in, expecting redirect to /register route", () => {
     return supertest(app)
         .get("/petition")
-        .then((res) => {
-            expect(res.statusCode).toBe(302);
-        });
-});
-test("GET to /, without logged in, expecting redirect to /register route", () => {
-    return supertest(app)
-        .get("/")
         .then((res) => {
             expect(res.headers.location).toBe("/register");
         });
@@ -53,7 +46,7 @@ test("GET to /petition, logged in and existing signature , expecting redirect to
         });
 });
 
-test("POST to /petition, logged in and existing signature, expecting redirect to /petition route", () => {
+test("POST to /petition, logged in and existing signature, expecting redirect to /petition/thankyou route", () => {
     cookieSession.mockSessionOnce({
         signatureId: 1,
         signedId: 1,
@@ -61,7 +54,7 @@ test("POST to /petition, logged in and existing signature, expecting redirect to
     return supertest(app)
         .post("/petition")
         .then((res) => {
-            expect(res.headers.location).toBe("/petition");
+            expect(res.headers.location).toBe("/petition/thankyou");
         });
 });
 

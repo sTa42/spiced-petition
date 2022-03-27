@@ -1,9 +1,9 @@
+<a href="/petition/signers" class="regularLink">Go back to view all signers</a>
 {{#if noSignersFromCity}}
     {{> petitionText prefix="Oh noes. Nobody from " suffix=" signed the " endsuffix=" Help spread the word."}}
 
 {{else}} {{> petitionText prefix="These people from " suffix="signed the "}}
 {{/if}}
-
 <div class="signatures-container">
     {{#if error}}
         <p class="error">Something went wrong.</p>
