@@ -10,6 +10,10 @@ router.get("/profile", requireLoggedInUser, (req, res) => {
             if (rows.length === 0) {
                 res.render("profile", {
                     loggedIn: true,
+                    user: {
+                        first: req.session.firstName,
+                        last: req.session.lastName,
+                    },
                 });
             } else {
                 return res.redirect("/profile/edit");
@@ -41,6 +45,10 @@ router.post("/profile", requireLoggedInUser, (req, res) => {
                 ) {
                     return res.render("profile", {
                         loggedIn: true,
+                        user: {
+                            first: req.session.firstName,
+                            last: req.session.lastName,
+                        },
                         err: "Some of your provided information was not allowed, please try again.",
                     });
                 }
@@ -57,6 +65,11 @@ router.post("/profile", requireLoggedInUser, (req, res) => {
                         console.log(error);
                         res.render("profile", {
                             loggedIn: true,
+                            user: {
+                                first: req.session.firstName,
+                                last: req.session.lastName,
+                            },
+
                             err: "Something went wrong, please try again.",
                         });
                     });
@@ -74,6 +87,10 @@ router.get("/profile/edit", requireLoggedInUser, (req, res) => {
             res.render("editprofile", {
                 loggedIn: true,
                 userData: userData[0],
+                user: {
+                    first: req.session.firstName,
+                    last: req.session.lastName,
+                },
             });
         })
         .catch((error) => {
@@ -96,6 +113,10 @@ router.post("/profile/edit", requireLoggedInUser, (req, res) => {
                     err: "Some of your provided information was not allowed, please try again.",
                     userData: userData[0],
                     dataChanged: true,
+                    user: {
+                        first: req.session.firstName,
+                        last: req.session.lastName,
+                    },
                 });
             })
             .catch((error) => {
@@ -122,8 +143,10 @@ router.post("/profile/edit", requireLoggedInUser, (req, res) => {
                         req.body.homepage
                     ),
                 ])
-                    .then(() => {
+                    .then((result) => {
                         // res.redirect("/profile/edit");
+                        req.session.firstName = result[0].rows[0].firstname;
+                        req.session.lastName = result[0].rows[0].lastname;
                         return db
                             .getCompleteUserProfileData(req.session.signatureId)
                             .then(({ rows: userData }) => {
@@ -131,6 +154,10 @@ router.post("/profile/edit", requireLoggedInUser, (req, res) => {
                                     loggedIn: true,
                                     userData: userData[0],
                                     dataChanged: true,
+                                    user: {
+                                        first: req.session.firstName,
+                                        last: req.session.lastName,
+                                    },
                                 });
                             })
                             .catch((error) => {
@@ -162,7 +189,9 @@ router.post("/profile/edit", requireLoggedInUser, (req, res) => {
                 req.body.homepage
             ),
         ])
-            .then(() => {
+            .then((result) => {
+                req.session.firstName = result[0].rows[0].firstname;
+                req.session.lastName = result[0].rows[0].lastname;
                 return db
                     .getCompleteUserProfileData(req.session.signatureId)
                     .then(({ rows: userData }) => {
@@ -170,6 +199,10 @@ router.post("/profile/edit", requireLoggedInUser, (req, res) => {
                             loggedIn: true,
                             userData: userData[0],
                             dataChanged: true,
+                            user: {
+                                first: req.session.firstName,
+                                last: req.session.lastName,
+                            },
                         });
                     })
                     .catch((error) => {
@@ -194,8 +227,5 @@ router.post("/profile/delete", requireLoggedInUser, (req, res) => {
             res.sendStatus(500);
         });
 });
-router.post("/profile/logout", requireLoggedInUser, (req, res) => {
-    req.session = null;
-    res.redirect("/login");
-});
+
 module.exports = router;

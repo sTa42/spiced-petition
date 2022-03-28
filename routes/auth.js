@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { requireLoggedOutUser } = require("../middleware");
+const { requireLoggedOutUser, requireLoggedInUser } = require("../middleware");
 const { hash, compare } = require("../bc");
 const db = require("../db");
-
+router.get("/", (req, res) => {
+    res.redirect("/register");
+});
 router.get("/register", requireLoggedOutUser, (req, res) => {
     res.render("register", {
         title: "Register for petition",
@@ -27,6 +29,8 @@ router.post("/register", requireLoggedOutUser, (req, res) => {
                 )
                 .then((result) => {
                     req.session.signatureId = result.rows[0].id;
+                    req.session.firstName = result.rows[0].firstname;
+                    req.session.lastName = result.rows[0].lastname;
                     res.redirect("/profile");
                 })
                 .catch((error) => {
@@ -61,6 +65,8 @@ router.post("/login", requireLoggedOutUser, (req, res) => {
                         if (result.rows[0].signedid) {
                             req.session.signedId = result.rows[0].signedid;
                         }
+                        req.session.firstName = result.rows[0].firstname;
+                        req.session.lastName = result.rows[0].lastname;
                         return res.redirect("/petition");
                     } else {
                         res.render("login", {
@@ -85,5 +91,8 @@ router.post("/login", requireLoggedOutUser, (req, res) => {
             });
         });
 });
-
+router.post("/logout", requireLoggedInUser, (req, res) => {
+    req.session = null;
+    res.redirect("/login");
+});
 module.exports = router;

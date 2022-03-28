@@ -12,7 +12,7 @@ exports.signPetition = (userId, signature) => {
 };
 exports.register = (firstname, lastname, email, password) => {
     return db.query(
-        `INSERT INTO users (firstname, lastname, email, password) VALUES ($1, $2, $3, $4) RETURNING id;`,
+        `INSERT INTO users (firstname, lastname, email, password) VALUES ($1, $2, $3, $4) RETURNING id, firstname, lastname;`,
         [firstname, lastname, email, password]
     );
 };
@@ -55,7 +55,7 @@ exports.getPasswordHash = (email) => {
 };
 exports.getPasswordHashAndSignerId = (email) => {
     return db.query(
-        `SELECT users.id AS userid, signatures.id AS signedid, users.password AS password  
+        3`SELECT users.id AS userid,users.firstname,users.lastname, signatures.id AS signedid, users.password AS password  
         FROM users 
         LEFT JOIN signatures 
         ON users.id = signatures.user_id 
@@ -102,13 +102,13 @@ exports.getCompleteUserProfileData = (id) => {
 exports.updateUser = (id, firstname, lastname, email, password) => {
     if (typeof password === "undefined") {
         return db.query(
-            `UPDATE users SET firstname=$2, lastname=$3, email=$4 WHERE id = $1;`,
+            `UPDATE users SET firstname=$2, lastname=$3, email=$4 WHERE id = $1 RETURNING firstname,lastname;`,
             [id, firstname, lastname, email]
         );
     } else {
         return db.query(
             `UPDATE users SET firstname=$2, lastname=$3, email=$4, password=$5 
-            WHERE id = $1;`,
+            WHERE id = $1 RETURNING firstname,lastname;`,
             [id, firstname, lastname, email, password]
         );
     }

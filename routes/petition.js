@@ -14,6 +14,10 @@ router.get("/petition", requireLoggedInUser, requireNoSignature, (req, res) => {
                 res.render("petition", {
                     title: "Petition for mandatory fedora",
                     loggedIn: true,
+                    user: {
+                        first: req.session.firstName,
+                        last: req.session.lastName,
+                    },
                 });
             } else {
                 return res.redirect("/petition/thankyou");
@@ -39,6 +43,10 @@ router.post(
                 res.render("petition", {
                     title: "Petition for mandatory fedora",
                     loggedIn: true,
+                    user: {
+                        first: req.session.firstName,
+                        last: req.session.lastName,
+                    },
                     err: "Something went wront, please try again.",
                 });
             });
@@ -57,6 +65,10 @@ router.get(
                 res.render("thankyou", {
                     title: "Thank you",
                     loggedIn: true,
+                    user: {
+                        first: req.session.firstName,
+                        last: req.session.lastName,
+                    },
                     imageDataUrl: result[0].rows[0].signature,
                     signersAmount: result[1].rows[0].count,
                 });
@@ -77,15 +89,23 @@ router.get(
                 res.render("signers", {
                     title: "Signers of the petition",
                     loggedIn: true,
+                    user: {
+                        first: req.session.firstName,
+                        last: req.session.lastName,
+                    },
+
                     signers,
                 });
             })
             .catch((error) => {
                 console.log(error);
                 res.render("signers", {
-                    layout: "main",
                     title: "Signers of the petition",
                     loggedIn: true,
+                    user: {
+                        first: req.session.firstName,
+                        last: req.session.lastName,
+                    },
                     error: "Something went wrong, please try again.",
                 });
             });
@@ -104,6 +124,10 @@ router.get(
                         title: "No signers from " + req.params.city,
                         noSignersFromCity: true,
                         loggedIn: true,
+                        user: {
+                            first: req.session.firstName,
+                            last: req.session.lastName,
+                        },
                     });
                 } else {
                     res.render("city", {
@@ -112,6 +136,10 @@ router.get(
                         cityView: true,
                         signers,
                         loggedIn: true,
+                        user: {
+                            first: req.session.firstName,
+                            last: req.session.lastName,
+                        },
                     });
                 }
             })

@@ -85,3 +85,11 @@ form button {
     cursor: pointer;
     font-size: 0.75em;
 }
+.user {
+    font-size: 0.5em;
+    color: darkblue;
+}
+.loggedIn {
+    font-size: 0.25em;
+    color: darkblue;
+}
