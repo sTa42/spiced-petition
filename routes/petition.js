@@ -93,6 +93,11 @@ router.get(
                         first: req.session.firstName,
                         last: req.session.lastName,
                     },
+                    helpers: {
+                        toUpperCase(text) {
+                            return text.toUpperCase();
+                        },
+                    },
 
                     signers,
                 });
