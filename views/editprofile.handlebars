@@ -1,7 +1,6 @@
 {{> petitionLink}}
-{{#if err}}
-    <p class="error">{{err}}</p>
-{{/if}}
+{{> error}}
+{{#if dataChanged}}<p id="savedMessage" class="regularText">Changes saved.</p>{{/if}}
 {{#with userData}}
 <form method="POST">
     <label for="firstname">First Name</label>
@@ -24,8 +23,17 @@
     <input name="city" value="{{city}}"/>
 
     <label for="homepage">Homepage</label>
-    <input name="homepage" value="{{url}}"/>
+    <input name="homepage" type="url" placeholder="http.." value="{{url}}"/>
     {{/with}}
 
     <button>UPDATE</button>
 </form>
+
+{{#if dataChanged}}
+<script>
+    setTimeout(() => {
+        document.getElementById("savedMessage").remove();
+        document.getElementsByTagName("script")[0].remove();
+    }, 3000);
+</script>
+{{/if}}

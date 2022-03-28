@@ -6,27 +6,22 @@ const {
     requireSignature,
 } = require("../middleware");
 const db = require("../db");
+
 router.get("/petition", requireLoggedInUser, requireNoSignature, (req, res) => {
     db.getSignatureDataImageUrl(req.session.signatureId)
         .then((result) => {
-            // console.log(result);
             if (result.rows.length === 0) {
                 res.render("petition", {
-                    layout: "main",
                     title: "Petition for mandatory fedora",
                     loggedIn: true,
                 });
             } else {
-                res.redirect("/petition/thankyou");
+                return res.redirect("/petition/thankyou");
             }
         })
-        .catch((err) => {
-            res.render("petition", {
-                layout: "main",
-                title: "Petition for mandatory fedora",
-                loggedIn: true,
-                err,
-            });
+        .catch((error) => {
+            console.log(error);
+            res.sendStatus(500);
         });
 });
 router.post(
@@ -34,22 +29,17 @@ router.post(
     requireLoggedInUser,
     requireNoSignature,
     (req, res) => {
-        // console.log(req.body);
-
         db.signPetition(req.session.signatureId, req.body.signature)
             .then((result) => {
-                // req.session.signatureId = result.rows[0].id;
-                // console.log(req.session);
                 req.session.signedId = result.rows[0].id;
-                res.redirect("/petition/thankyou");
+                return res.redirect("/petition/thankyou");
             })
-            .catch((err) => {
-                // console.log(err);
+            .catch((error) => {
+                console.log(error);
                 res.render("petition", {
-                    layout: "main",
                     title: "Petition for mandatory fedora",
                     loggedIn: true,
-                    err,
+                    err: "Something went wront, please try again.",
                 });
             });
     }
@@ -65,16 +55,15 @@ router.get(
         ])
             .then((result) => {
                 res.render("thankyou", {
-                    layout: "main",
                     title: "Thank you",
                     loggedIn: true,
                     imageDataUrl: result[0].rows[0].signature,
                     signersAmount: result[1].rows[0].count,
                 });
             })
-            .catch((err) => {
-                console.log(err);
-                res.redirect("/");
+            .catch((error) => {
+                console.log(error);
+                return res.sendStatus(500);
             });
     }
 );
@@ -85,21 +74,19 @@ router.get(
     (req, res) => {
         db.getAllPetitionSigners()
             .then(({ rows: signers }) => {
-                console.log(signers);
                 res.render("signers", {
-                    layout: "main",
                     title: "Signers of the petition",
                     loggedIn: true,
                     signers,
                 });
             })
-            .catch((err) => {
-                console.log(err);
+            .catch((error) => {
+                console.log(error);
                 res.render("signers", {
                     layout: "main",
                     title: "Signers of the petition",
                     loggedIn: true,
-                    error: true,
+                    error: "Something went wrong, please try again.",
                 });
             });
     }
@@ -111,10 +98,8 @@ router.get(
     (req, res) => {
         db.getSignersByCity(req.params.city)
             .then(({ rows: signers }) => {
-                // console.log(signers);
                 if (signers.length === 0) {
                     res.render("city", {
-                        layout: "main",
                         city: req.params.city,
                         title: "No signers from " + req.params.city,
                         noSignersFromCity: true,
@@ -122,7 +107,6 @@ router.get(
                     });
                 } else {
                     res.render("city", {
-                        layout: "main",
                         title: "Signers from " + req.params.city,
                         city: req.params.city,
                         cityView: true,
@@ -131,8 +115,9 @@ router.get(
                     });
                 }
             })
-            .catch(() => {
-                res.render("city", { layout: "main", loggedIn: true });
+            .catch((error) => {
+                console.log(error);
+                res.sendStatus(500);
             });
     }
 );
@@ -146,7 +131,10 @@ router.post(
                 req.session.signedId = null;
                 res.redirect("/petition");
             })
-            .catch();
+            .catch((error) => {
+                console.log(error);
+                res.sendStatus(500);
+            });
     }
 );
 module.exports = router;

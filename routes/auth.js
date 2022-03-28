@@ -10,6 +10,12 @@ router.get("/register", requireLoggedOutUser, (req, res) => {
     });
 });
 router.post("/register", requireLoggedOutUser, (req, res) => {
+    if (!req.body.email.includes("@")) {
+        return res.render("register", {
+            title: "Register for petition",
+            err: "Please provide a correct email adress.",
+        });
+    }
     hash(req.body.password)
         .then((hashedPassword) => {
             return db
@@ -23,17 +29,17 @@ router.post("/register", requireLoggedOutUser, (req, res) => {
                     req.session.signatureId = result.rows[0].id;
                     res.redirect("/profile");
                 })
-                .catch((err) => {
-                    console.log(err);
+                .catch((error) => {
+                    console.log(error);
                     res.render("register", {
-                        layout: "main",
-                        title: "Register for petition ",
-                        err,
+                        title: "Register for petition",
+                        err: "Something went wrong, please try again.",
                     });
                 });
         })
-        .catch((err) => {
-            console.log(err);
+        .catch((error) => {
+            console.log(error);
+            res.sendStatus(500);
         });
 });
 router.get("/login", requireLoggedOutUser, (req, res) => {
@@ -44,42 +50,38 @@ router.get("/login", requireLoggedOutUser, (req, res) => {
 router.post("/login", requireLoggedOutUser, (req, res) => {
     db.getPasswordHashAndSignerId(req.body.email)
         .then((result) => {
-            console.log(result.rows[0]);
+            // console.log(result.rows[0]);
             const hashedPassword = result.rows[0].password;
             const userId = result.rows[0].userid;
 
-            // console.log(hashedPassword);
             return compare(req.body.password, hashedPassword)
                 .then((isPasswordCorrect) => {
-                    // console.log(isPasswordCorrect);
                     if (isPasswordCorrect) {
                         req.session.signatureId = userId;
                         if (result.rows[0].signedid) {
                             req.session.signedId = result.rows[0].signedid;
                         }
-                        res.redirect("/petition");
+                        return res.redirect("/petition");
                     } else {
                         res.render("login", {
-                            layout: "main",
                             title: "Login",
-                            err: "password wrong",
+                            err: "Something went wrong, please try again.",
                         });
                     }
                 })
-                .catch((err) => {
-                    // console.log(err);
+                .catch((error) => {
+                    console.log(error);
                     res.render("login", {
-                        layout: "main",
                         title: "Login",
-                        err,
+                        err: "Something went wrong, please try again.",
                     });
                 });
         })
-        .catch((err) => {
+        .catch((error) => {
+            console.log(error);
             res.render("login", {
-                layout: "main",
-                title: "Login",
-                err,
+                title: "Login for petition",
+                err: "Something went wrong, please try again.",
             });
         });
 });

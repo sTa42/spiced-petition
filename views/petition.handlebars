@@ -1,7 +1,5 @@
 {{> petitionText prefix="Sign this"}}
-{{#if err}}
-    <p class="error">{{err}}</p>
-{{/if}}
+{{> error}}
 <form method="POST">
     <label for="signature">Sign here</label>
     <canvas class="signature" id="signature-canvas" width="400" height="50"></canvas>

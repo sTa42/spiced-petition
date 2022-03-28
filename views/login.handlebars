@@ -1,13 +1,11 @@
 {{> petitionText prefix="Login to sign the "}}
-{{#if err}}
-    <p class="error">{{err}}</p>
-{{/if}}
+{{> error}}
 <form method="POST">
     <label for="email">Email</label>
-    <input type="email" name="email" />
+    <input type="email" name="email" required/>
 
     <label for="password">Password</label>
-    <input type="password" name="password" />
+    <input type="password" name="password" required/>
     
     <button>LOGIN</button>
 </form>

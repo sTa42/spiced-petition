@@ -21,3 +21,7 @@ module.exports.requireSignature = (req, res, next) => {
     if (!req.session.signedId) return res.redirect("/petition");
     next();
 };
+module.exports.requireNoProfile = (req, res, next) => {
+    if (req.session.profileId) return res.redirect("/profile/edit");
+    next();
+};

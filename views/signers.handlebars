@@ -1,10 +1,7 @@
 <a href="/petition/thankyou" class="regularLink">Go back to view your signature</a>
 {{> petitionText prefix="These people signed the"}}
-<div class="signatures-container">
-    {{#if error}}
-        <p class="error">Something went wrong.</p>
-    {{else}}
-    
-        {{> firstAndLastName}}
-    {{/if}}
+{{> error}}
+{{#if signers}}
+    {{> listSigners}}
+{{/if}}
 </div>

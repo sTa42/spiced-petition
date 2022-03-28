@@ -9,14 +9,16 @@ router.get("/profile", requireLoggedInUser, (req, res) => {
         .then(({ rows }) => {
             if (rows.length === 0) {
                 res.render("profile", {
-                    layout: "main",
                     loggedIn: true,
                 });
             } else {
                 return res.redirect("/profile/edit");
             }
         })
-        .catch(() => {});
+        .catch((error) => {
+            console.log(error);
+            res.sendStatus(500);
+        });
 });
 router.post("/profile", requireLoggedInUser, (req, res) => {
     db.doesUserhaveProfile(req.session.signatureId)
@@ -31,17 +33,15 @@ router.post("/profile", requireLoggedInUser, (req, res) => {
                     return res.redirect("/petition");
                 }
                 if (
-                    req.body.age.startsWith("<") ||
-                    req.body.age.startsWith("http") ||
+                    isNaN(req.body.age) ||
                     req.body.city.startsWith("<") ||
                     req.body.city.startsWith("http") ||
-                    req.body.homepage.startsWith("<") ||
-                    req.body.homepage.startsWith("http")
+                    (req.body.homepage.length != 0 &&
+                        !req.body.homepage.startsWith("http"))
                 ) {
                     return res.render("profile", {
-                        layout: "main",
                         loggedIn: true,
-                        err: "bad input",
+                        err: "Some of your provided information was not allowed, please try again.",
                     });
                 }
                 db.addProfile(
@@ -53,54 +53,55 @@ router.post("/profile", requireLoggedInUser, (req, res) => {
                     .then(() => {
                         res.redirect("/petition");
                     })
-                    .catch((err) => {
+                    .catch((error) => {
+                        console.log(error);
                         res.render("profile", {
-                            layout: "main",
                             loggedIn: true,
-                            err,
+                            err: "Something went wrong, please try again.",
                         });
                     });
             }
-            return res.redirect("/profile/edit");
+            // return res.redirect("/profile/edit");
         })
-        .catch(() => {
-            res.redirect("/petition");
+        .catch((error) => {
+            console.log(error);
+            res.sendStatus(500);
         });
 });
 router.get("/profile/edit", requireLoggedInUser, (req, res) => {
     db.getCompleteUserProfileData(req.session.signatureId)
         .then(({ rows: userData }) => {
-            console.log(userData);
             res.render("editprofile", {
-                layout: "main",
                 loggedIn: true,
                 userData: userData[0],
             });
         })
-        .catch();
+        .catch((error) => {
+            console.log(error);
+            res.sendStatus(500);
+        });
 });
 router.post("/profile/edit", requireLoggedInUser, (req, res) => {
-    console.log(req.body);
     if (
-        req.body.age.startsWith("<") ||
-        req.body.age.startsWith("http") ||
+        isNaN(req.body.age) ||
         req.body.city.startsWith("<") ||
         req.body.city.startsWith("http") ||
-        req.body.homepage.startsWith("<")
+        (req.body.homepage.length != 0 && !req.body.homepage.startsWith("http"))
     ) {
         return db
             .getCompleteUserProfileData(req.session.signatureId)
             .then(({ rows: userData }) => {
-                console.log(userData);
-
                 res.render("editprofile", {
-                    layout: "main",
                     loggedIn: true,
-                    err: "bad input",
+                    err: "Some of your provided information was not allowed, please try again.",
                     userData: userData[0],
+                    dataChanged: true,
                 });
             })
-            .catch(() => {});
+            .catch((error) => {
+                console.log(error);
+                res.sendStatus(500);
+            });
     }
 
     if (req.body.password.length != 0) {
@@ -122,14 +123,29 @@ router.post("/profile/edit", requireLoggedInUser, (req, res) => {
                     ),
                 ])
                     .then(() => {
-                        res.redirect("/profile/edit");
+                        // res.redirect("/profile/edit");
+                        return db
+                            .getCompleteUserProfileData(req.session.signatureId)
+                            .then(({ rows: userData }) => {
+                                res.render("editprofile", {
+                                    loggedIn: true,
+                                    userData: userData[0],
+                                    dataChanged: true,
+                                });
+                            })
+                            .catch((error) => {
+                                console.log(error);
+                                res.sendStatus(500);
+                            });
                     })
-                    .catch(() => {
-                        res.redirect("/profile/edit");
+                    .catch((error) => {
+                        console.log(error);
+                        res.sendStatus(500);
                     });
             })
-            .catch((err) => {
-                console.log(err);
+            .catch((error) => {
+                console.log(error);
+                res.sendStatus(500);
             });
     } else {
         Promise.all([
@@ -147,22 +163,35 @@ router.post("/profile/edit", requireLoggedInUser, (req, res) => {
             ),
         ])
             .then(() => {
-                res.redirect("/profile/edit");
+                return db
+                    .getCompleteUserProfileData(req.session.signatureId)
+                    .then(({ rows: userData }) => {
+                        res.render("editprofile", {
+                            loggedIn: true,
+                            userData: userData[0],
+                            dataChanged: true,
+                        });
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                        res.sendStatus(500);
+                    });
             })
-            .catch(() => {
-                res.redirect("/profile/edit");
+            .catch((error) => {
+                console.log(error);
+                res.sendStatus(500);
             });
     }
 });
 router.post("/profile/delete", requireLoggedInUser, (req, res) => {
     db.deleteAccount(req.session.signatureId)
-        .then((result) => {
+        .then(() => {
             req.session = null;
-            // console.log(result);
             res.redirect("/register");
         })
-        .catch((err) => {
-            console.log(err);
+        .catch((error) => {
+            console.log(error);
+            res.sendStatus(500);
         });
 });
 router.post("/profile/logout", requireLoggedInUser, (req, res) => {

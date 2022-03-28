@@ -4,12 +4,7 @@
 
 {{else}} {{> petitionText prefix="These people from " suffix="signed the "}}
 {{/if}}
-<div class="signatures-container">
-    {{#if error}}
-        <p class="error">Something went wrong.</p>
-    {{else}}
-
-    
-        {{> firstAndLastName}}
-    {{/if}}
-</div>
+{{> error}}
+{{#if signers}}
+    {{> listSigners}}
+{{/if}}

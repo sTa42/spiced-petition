@@ -114,7 +114,7 @@ exports.updateUser = (id, firstname, lastname, email, password) => {
     }
 };
 exports.updateUserProfileData = (id, age, city, url) => {
-    console.log("FROM DATABASE", id, age, city, url);
+    // console.log("FROM DATABASE", id, age, city, url);
     if (age.length === 0) age = null;
     if (city.length === 0) city = null;
     if (url.length === 0) url = null;
@@ -136,11 +136,11 @@ exports.deleteSignature = (id) => {
 
 exports.deleteAccount = (id) => {
     return Promise.all([
-        db.query(`DELETE FROM signatures WHERE user_id = $1`, [id]),
-        db.query(`DELETE FROM user_profiles WHERE user_id = $1`, [id]),
+        db.query(`DELETE FROM signatures WHERE user_id = $1;`, [id]),
+        db.query(`DELETE FROM user_profiles WHERE user_id = $1;`, [id]),
     ])
         .then(() => {
-            return db.query(`DELETE FROM users WHERE id = $1`, [id]);
+            return db.query(`DELETE FROM users WHERE id = $1;`, [id]);
         })
         .catch((err) => {
             console.log(err);

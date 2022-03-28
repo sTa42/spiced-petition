@@ -1,17 +1,14 @@
-{{#if err}}
-    <p class="error">{{err}}</p>
-{{/if}}
-
 <p class="regularText">If you want, you can add some personal information here.</p>
+{{> error}}
 <form method="POST">
     <label for="age">Age</label>
     <input type="number" min="0" max="140" name="age" />
 
     <label for="city">City</label>
-    <input name="city" />
+    <input name="city"/>
 
     <label for="homepage">Homepage</label>
-    <input name="homepage" />
+    <input name="homepage" type="url" placeholder="http.."/>
 
     <button>SUBMIT</button>
 </form>
