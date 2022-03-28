@@ -55,7 +55,7 @@ exports.getPasswordHash = (email) => {
 };
 exports.getPasswordHashAndSignerId = (email) => {
     return db.query(
-        3`SELECT users.id AS userid,users.firstname,users.lastname, signatures.id AS signedid, users.password AS password  
+        `SELECT users.id AS userid,users.firstname,users.lastname, signatures.id AS signedid, users.password AS password  
         FROM users 
         LEFT JOIN signatures 
         ON users.id = signatures.user_id 

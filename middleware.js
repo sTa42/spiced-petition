@@ -1,5 +1,7 @@
 module.exports.requireLoggedOutUser = (req, res, next) => {
-    if (req.session.signatureId) return res.redirect("/petition");
+    if (req.session.signatureId) {
+        return res.redirect("/petition");
+    }
 
     next();
 };
@@ -8,8 +10,9 @@ module.exports.requireLoggedInUser = (req, res, next) => {
         !req.session.signatureId &&
         req.url != "/register" &&
         req.url != "/login"
-    )
+    ) {
         return res.redirect("/register");
+    }
 
     next();
 };

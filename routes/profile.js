@@ -38,6 +38,8 @@ router.post("/profile", requireLoggedInUser, (req, res) => {
                 }
                 if (
                     isNaN(req.body.age) ||
+                    req.body.age > 140 ||
+                    req.body.age < 0 ||
                     req.body.city.startsWith("<") ||
                     req.body.city.startsWith("http") ||
                     (req.body.homepage.length != 0 &&
@@ -101,6 +103,8 @@ router.get("/profile/edit", requireLoggedInUser, (req, res) => {
 router.post("/profile/edit", requireLoggedInUser, (req, res) => {
     if (
         isNaN(req.body.age) ||
+        req.body.age > 140 ||
+        req.body.age < 0 ||
         req.body.city.startsWith("<") ||
         req.body.city.startsWith("http") ||
         (req.body.homepage.length != 0 && !req.body.homepage.startsWith("http"))
@@ -112,7 +116,6 @@ router.post("/profile/edit", requireLoggedInUser, (req, res) => {
                     loggedIn: true,
                     err: "Some of your provided information was not allowed, please try again.",
                     userData: userData[0],
-                    dataChanged: true,
                     user: {
                         first: req.session.firstName,
                         last: req.session.lastName,
@@ -120,7 +123,7 @@ router.post("/profile/edit", requireLoggedInUser, (req, res) => {
                 });
             })
             .catch((error) => {
-                console.log(error);
+                console.log("first", error);
                 res.sendStatus(500);
             });
     }
@@ -161,17 +164,17 @@ router.post("/profile/edit", requireLoggedInUser, (req, res) => {
                                 });
                             })
                             .catch((error) => {
-                                console.log(error);
+                                console.log("second", error);
                                 res.sendStatus(500);
                             });
                     })
                     .catch((error) => {
-                        console.log(error);
+                        console.log("third", error);
                         res.sendStatus(500);
                     });
             })
             .catch((error) => {
-                console.log(error);
+                console.log("fourth", error);
                 res.sendStatus(500);
             });
     } else {
@@ -206,13 +209,29 @@ router.post("/profile/edit", requireLoggedInUser, (req, res) => {
                         });
                     })
                     .catch((error) => {
-                        console.log(error);
+                        console.log("fifth", error);
                         res.sendStatus(500);
                     });
             })
             .catch((error) => {
                 console.log(error);
-                res.sendStatus(500);
+                return db
+                    .getCompleteUserProfileData(req.session.signatureId)
+                    .then(({ rows: userData }) => {
+                        res.render("editprofile", {
+                            loggedIn: true,
+                            userData: userData[0],
+                            err: "Some of your provided information was not allowed, please try again.",
+                            user: {
+                                first: req.session.firstName,
+                                last: req.session.lastName,
+                            },
+                        });
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                        res.sendStatus(500);
+                    });
             });
     }
 });
