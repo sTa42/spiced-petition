@@ -81,8 +81,8 @@ exports.getSignersByCity = (city) => {
         FROM signatures 
         JOIN users 
         ON signatures.user_id = users.id 
-        FULL OUTER JOIN user_profiles 
-        ON user_profiles.user_id = users.id
+        JOIN user_profiles 
+        ON user_profiles.user_id = signatures.user_id
         WHERE LOWER(user_profiles.city) = LOWER($1);`,
         [city]
     );
