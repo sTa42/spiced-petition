@@ -28,8 +28,8 @@ It is a petition website, where you can sign a petition and see other signers.
 
 ## **Preview**
 *to be added*
-## **live version**
-[Fedora petition](https://petition-fedora.herokuapp.com/)
+### **live version**
+https://petition-fedora.herokuapp.com/
 
 ## **Setup and start**
 - ### **Intall node modules**
